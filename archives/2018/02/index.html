@@ -84,7 +84,7 @@
 <meta name="description" content="Whatever is worth doing is worth doing well.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Lance`s Blog">
-<meta property="og:url" content="https://lancexhui.github.io/index.html">
+<meta property="og:url" content="https://lancexhui.github.io/archives/2018/02/index.html">
 <meta property="og:site_name" content="Lance`s Blog">
 <meta property="og:description" content="Whatever is worth doing is worth doing well.">
 <meta property="og:locale" content="zh-Hans">
@@ -120,13 +120,13 @@
 
 
 
-  <link rel="canonical" href="https://lancexhui.github.io/"/>
+  <link rel="canonical" href="https://lancexhui.github.io/archives/2018/02/"/>
 
 
 
 
 
-  <title>Lance`s Blog</title>
+  <title>归档 | Lance`s Blog</title>
   
 
 
@@ -145,8 +145,7 @@
     
   
 
-  <div class="container sidebar-position-right 
-  page-home">
+  <div class="container sidebar-position-right page-archive">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -283,292 +282,75 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
-    
+
+  
+  
+  
+  <div class="post-block archive">
+    <div id="posts" class="posts-collapse">
+      <span class="archive-move-on"></span>
+
+      <span class="archive-page-counter">
+        
+        
+        
+          
+        
+        嗯..! 目前共计 2 篇日志。 继续努力。
+      </span>
+
       
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://lancexhui.github.io/2018/02/06/从值类型复制引发的Swift内存的思考01/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lance">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/lance.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lance`s Blog">
-    </span>
-
-    
-      <header class="post-header">
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/02/06/从值类型复制引发的Swift内存的思考01/" itemprop="url">从值类型复制引发的Swift内存的思考01</a></h1>
         
 
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-06T15:23:18+08:00">
-                2018-02-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/02/06/从值类型复制引发的Swift内存的思考01/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/02/06/从值类型复制引发的Swift内存的思考01/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
         
-          <h2 id="Question"><a href="#Question" class="headerlink" title="Question"></a>Question</h2><p>前不久看了一篇文章，喵神的<a href="http://swifter.tips/value-reference/" target="_blank" rel="noopener">值类型和引用类型</a>,在阅读的时候有一个结论 <code>值类型被复制的时机是值类型的内容发生改变时...</code> 这个时候本来是想记下来的，后来转念一想,实践出真知，所以我就基于这个问题: <strong>值类型到底是什么时候被赋值的?</strong> 做了一些调查和实践，从而有了这系列文章…</p>
-<h2 id="Answer"><a href="#Answer" class="headerlink" title="Answer"></a>Answer</h2><p>我在iOS Playground中写了如下示例,初始化了<code>Int String Struct Array</code>并且立刻进行了赋值操作：</p>
-<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Me</span> </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> age: <span class="type">Int</span> = <span class="number">22</span>            <span class="comment">// 8</span></span><br><span class="line">    <span class="keyword">let</span> height: <span class="type">Double</span> = <span class="number">180.0</span>   <span class="comment">// 8</span></span><br><span class="line">    <span class="keyword">let</span> name: <span class="type">String</span> = <span class="string">"XiangHui"</span><span class="comment">// 24</span></span><br><span class="line">    <span class="keyword">var</span> hasGirlFriend: <span class="type">Bool</span>?     <span class="comment">// 1</span></span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">var</span> a = <span class="number">134</span></span><br><span class="line"><span class="keyword">var</span> cpa = a</span><br><span class="line">    </span><br><span class="line"><span class="keyword">var</span> b = <span class="string">"JoJo"</span></span><br><span class="line"><span class="keyword">var</span> cpb = b</span><br><span class="line">    </span><br><span class="line"><span class="keyword">var</span> me = <span class="type">Me</span>()</span><br><span class="line"><span class="keyword">var</span> secondMe = me</span><br><span class="line">    </span><br><span class="line"><span class="keyword">var</span> likes = [<span class="string">"comdy"</span>, <span class="string">"animation"</span>, <span class="string">"movies"</span>]</span><br><span class="line"><span class="keyword">var</span> cpLikes = likes</span><br></pre></td></tr></table></figure>
-<p>并且随后使用一个swift指针方法来输出值类型在内存中的地址：</p>
-<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">withUnsafeBytes(of: &amp;<span class="type">T</span>, &#123; bytes <span class="keyword">in</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">"T: <span class="subst">\(bytes)</span>"</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<p>那么其实我们可以猜测一下，如果是在值类型发生改变的时候才去赋值的话(写时复制)，那么以上复制的变量的地址应该和原变量是一样的，结果如下：</p>
-<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">a: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500ef8</span>, <span class="built_in">count</span>: <span class="number">8</span>)</span><br><span class="line">cpa: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f00</span>, <span class="built_in">count</span>: <span class="number">8</span>)</span><br><span class="line">b: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f18</span>, <span class="built_in">count</span>: <span class="number">24</span>)</span><br><span class="line">cpb: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500ee0</span>, <span class="built_in">count</span>: <span class="number">24</span>)</span><br><span class="line">me: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500fa8</span>, <span class="built_in">count</span>: <span class="number">41</span>)</span><br><span class="line">secondMe: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f40</span>, <span class="built_in">count</span>: <span class="number">41</span>)</span><br><span class="line">likes: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f30</span>, <span class="built_in">count</span>: <span class="number">8</span>)</span><br><span class="line">cpliles: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f08</span>, <span class="built_in">count</span>: <span class="number">8</span>)</span><br></pre></td></tr></table></figure>
-<p>显然，<strong>值类型的值并非是在改变的时候才去复制，而是在赋值的时候就会进行复制！</strong>    </p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/02/06/从值类型复制引发的Swift内存的思考01/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
+          
+          <div class="collection-title">
+            <h1 class="archive-year" id="archive-year-2018">2018</h1>
           </div>
-          <!--/noindex-->
         
-      
-    </div>
-    
-    
-    
+        
 
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
+        
 
   <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://lancexhui.github.io/2018/01/29/hello-world/">
+    <header class="post-header">
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lance">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/lance.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lance`s Blog">
-    </span>
-
-    
-      <header class="post-header">
-
+      <h2 class="post-title">
         
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/01/29/hello-world/" itemprop="url">Hello World</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
+            <a class="post-title-link" href="/2018/02/06/从值类型复制引发的Swift内存的思考01/" itemprop="url">
               
-                <span class="post-meta-item-text">发表于</span>
+                <span itemprop="name">从值类型复制引发的Swift内存的思考01</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-29T17:46:04+08:00">
-                2018-01-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/01/29/hello-world/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/01/29/hello-world/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
+            </a>
         
-          
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+      </h2>
 
-          
-        
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated"
+              datetime="2018-02-06T15:23:18+08:00"
+              content="2018-02-06" >
+          02-06
+        </time>
+      </div>
+
+    </header>
+  </article>
+
+
+
       
+
     </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
   </div>
   
   
   
-  </article>
-
-
-    
-  </section>
 
   
+
 
 
           </div>

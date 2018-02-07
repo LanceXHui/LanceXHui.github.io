@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="iOS Swift," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lance`s Blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="Question前不久看了一篇文章，喵神的值类型和引用类型,在阅读的时候有一个结论 值类型被复制的时机是值类型的内容发生改变时... 这个时候本来是想记下来的，后来转念一想,实践出真知，所以我就基于这个问题: 值类型到底是什么时候被赋值的? 做了一些调查和实践，从而有了这系列文章… Answer我在iOS Playground中写了如下示例,初始化了Int String Struct Array并">
+<meta name="keywords" content="iOS Swift">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从值类型复制引发的Swift内存的思考01">
+<meta property="og:url" content="https://lancexhui.github.io/2018/02/06/从值类型复制引发的Swift内存的思考01/index.html">
+<meta property="og:site_name" content="Lance`s Blog">
+<meta property="og:description" content="Question前不久看了一篇文章，喵神的值类型和引用类型,在阅读的时候有一个结论 值类型被复制的时机是值类型的内容发生改变时... 这个时候本来是想记下来的，后来转念一想,实践出真知，所以我就基于这个问题: 值类型到底是什么时候被赋值的? 做了一些调查和实践，从而有了这系列文章… Answer我在iOS Playground中写了如下示例,初始化了Int String Struct Array并">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-06%20%E4%B8%8B%E5%8D%882.54.23.png">
+<meta property="og:image" content="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%86%85%E5%AD%98%E6%A6%82%E8%A7%88.png">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-782b760d0d011781e0b76fd1363d2901_hd.jpg">
+<meta property="og:image" content="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E6%A0%88%E5%86%85%E5%AD%98.png">
+<meta property="og:image" content="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E6%96%B9%E6%B3%95%E6%A0%88.png">
+<meta property="og:image" content="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%A0%86%E5%86%85%E5%AD%9801.png">
+<meta property="og:image" content="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%A0%86%E5%86%85%E5%AD%9802.png">
+<meta property="og:image" content="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%A0%86%E5%86%85%E5%AD%98%E5%AE%8C.png">
+<meta property="og:updated_time" content="2018-02-07T13:28:54.822Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从值类型复制引发的Swift内存的思考01">
+<meta name="twitter:description" content="Question前不久看了一篇文章，喵神的值类型和引用类型,在阅读的时候有一个结论 值类型被复制的时机是值类型的内容发生改变时... 这个时候本来是想记下来的，后来转念一想,实践出真知，所以我就基于这个问题: 值类型到底是什么时候被赋值的? 做了一些调查和实践，从而有了这系列文章… Answer我在iOS Playground中写了如下示例,初始化了Int String Struct Array并">
+<meta name="twitter:image" content="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-06%20%E4%B8%8B%E5%8D%882.54.23.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"right","display":"always","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://lancexhui.github.io/2018/02/06/从值类型复制引发的Swift内存的思考01/"/>
+
+
+
+
+
+  <title>从值类型复制引发的Swift内存的思考01 | Lance`s Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lance`s Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心有猛虎，细嗅蔷薇</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://lancexhui.github.io/2018/02/06/从值类型复制引发的Swift内存的思考01/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lance">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/lance.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lance`s Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">从值类型复制引发的Swift内存的思考01</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-06T15:23:18+08:00">
+                2018-02-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/02/06/从值类型复制引发的Swift内存的思考01/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/02/06/从值类型复制引发的Swift内存的思考01/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Question"><a href="#Question" class="headerlink" title="Question"></a>Question</h2><p>前不久看了一篇文章，喵神的<a href="http://swifter.tips/value-reference/" target="_blank" rel="noopener">值类型和引用类型</a>,在阅读的时候有一个结论 <code>值类型被复制的时机是值类型的内容发生改变时...</code> 这个时候本来是想记下来的，后来转念一想,实践出真知，所以我就基于这个问题: <strong>值类型到底是什么时候被赋值的?</strong> 做了一些调查和实践，从而有了这系列文章…</p>
+<h2 id="Answer"><a href="#Answer" class="headerlink" title="Answer"></a>Answer</h2><p>我在iOS Playground中写了如下示例,初始化了<code>Int String Struct Array</code>并且立刻进行了赋值操作：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Me</span> </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> age: <span class="type">Int</span> = <span class="number">22</span>            <span class="comment">// 8</span></span><br><span class="line">    <span class="keyword">let</span> height: <span class="type">Double</span> = <span class="number">180.0</span>   <span class="comment">// 8</span></span><br><span class="line">    <span class="keyword">let</span> name: <span class="type">String</span> = <span class="string">"XiangHui"</span><span class="comment">// 24</span></span><br><span class="line">    <span class="keyword">var</span> hasGirlFriend: <span class="type">Bool</span>?     <span class="comment">// 1</span></span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">var</span> a = <span class="number">134</span></span><br><span class="line"><span class="keyword">var</span> cpa = a</span><br><span class="line">    </span><br><span class="line"><span class="keyword">var</span> b = <span class="string">"JoJo"</span></span><br><span class="line"><span class="keyword">var</span> cpb = b</span><br><span class="line">    </span><br><span class="line"><span class="keyword">var</span> me = <span class="type">Me</span>()</span><br><span class="line"><span class="keyword">var</span> secondMe = me</span><br><span class="line">    </span><br><span class="line"><span class="keyword">var</span> likes = [<span class="string">"comdy"</span>, <span class="string">"animation"</span>, <span class="string">"movies"</span>]</span><br><span class="line"><span class="keyword">var</span> cpLikes = likes</span><br></pre></td></tr></table></figure>
+<p>并且随后使用一个swift指针方法来输出值类型在内存中的地址：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">withUnsafeBytes(of: &amp;<span class="type">T</span>, &#123; bytes <span class="keyword">in</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">"T: <span class="subst">\(bytes)</span>"</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>那么其实我们可以猜测一下，如果是在值类型发生改变的时候才去赋值的话(写时复制)，那么以上复制的变量的地址应该和原变量是一样的，结果如下：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">a: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500ef8</span>, <span class="built_in">count</span>: <span class="number">8</span>)</span><br><span class="line">cpa: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f00</span>, <span class="built_in">count</span>: <span class="number">8</span>)</span><br><span class="line">b: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f18</span>, <span class="built_in">count</span>: <span class="number">24</span>)</span><br><span class="line">cpb: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500ee0</span>, <span class="built_in">count</span>: <span class="number">24</span>)</span><br><span class="line">me: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500fa8</span>, <span class="built_in">count</span>: <span class="number">41</span>)</span><br><span class="line">secondMe: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f40</span>, <span class="built_in">count</span>: <span class="number">41</span>)</span><br><span class="line">likes: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f30</span>, <span class="built_in">count</span>: <span class="number">8</span>)</span><br><span class="line">cpliles: <span class="type">UnsafeRawBufferPointer</span>(start: <span class="number">0x00007ffee3500f08</span>, <span class="built_in">count</span>: <span class="number">8</span>)</span><br></pre></td></tr></table></figure>
+<p>显然，<strong>值类型的值并非是在改变的时候才去复制，而是在赋值的时候就会进行复制！</strong>    </p>
+<a id="more"></a>
+<h2 id="Deep-in"><a href="#Deep-in" class="headerlink" title="Deep in"></a>Deep in</h2><p>当这个问题解决之后又不禁有了新的疑问：</p>
+<ul>
+<li>在系统中内存究竟是如何分配的？</li>
+<li>栈中的数据到底是如何存储的？</li>
+<li>堆上的数据又是如何存储的？</li>
+</ul>
+<p>针对我的这三个简单但是宽泛的问题，我做了大量的阅读和实践，然后有了下面的一些思考和总结：</p>
+<h3 id="Concept"><a href="#Concept" class="headerlink" title="Concept"></a>Concept</h3><p>在进行更抽象的内存理论之前，得了解几个基本的概念，首先是可操作内存区域，在程序中我们使用的内存区域就是图中的绿色区域：</p>
+<p><img src="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-02-06%20%E4%B8%8B%E5%8D%882.54.23.png" alt=""></p>
+<p>在这块区域中我们可以简要的分为三个区域堆，栈，全局区。<strong>在现代的CPU每次读取数据的时候，都会读取一个word，在64位上，也就是8个字节。</strong></p>
+<ul>
+<li><strong>Stack</strong>  存储方法调用；局部变量（Method invocation; Locial variables）</li>
+<li><strong>Heap</strong>   存储对象(all objects!)</li>
+<li><strong>Global</strong> 存储全局变量；常量；代码区</li>
+</ul>
+<p><img src="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%86%85%E5%AD%98%E6%A6%82%E8%A7%88.png" alt=""></p>
+<p>这样一看其实有一点豁然开朗的感觉，其实<strong>基本只有方法或者特定类型如结构体中出现的变量才是局部变量</strong>，也就是说在方法中声明的变量都是分配在栈上的，然而在类中声明一个基本类型作为对象属性，其实是在堆上分配的</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">	<span class="keyword">let</span> a = <span class="number">4</span> <span class="comment">// 分配在堆上</span></span><br><span class="line">	<span class="function"><span class="keyword">func</span> <span class="title">printMyName</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">let</span> myName = <span class="string">"JoJo"</span> <span class="comment">// 分配在栈上</span></span><br><span class="line">		<span class="built_in">print</span>(<span class="string">"<span class="subst">\(myName)</span>"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="MemoryLayout"><a href="#MemoryLayout" class="headerlink" title="MemoryLayout"></a>MemoryLayout</h3><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//值类型</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">Int</span>&gt;.size           <span class="comment">//8</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">Int</span>&gt;.alignment      <span class="comment">//8</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">Int</span>&gt;.<span class="built_in">stride</span>         <span class="comment">//8</span></span><br><span class="line"></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">String</span>&gt;.size        <span class="comment">//24</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">String</span>&gt;.alignment   <span class="comment">//8</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">String</span>&gt;.<span class="built_in">stride</span>      <span class="comment">//24</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//引用类型 T</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">T</span>&gt;.size             <span class="comment">//8</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">T</span>&gt;.alignment        <span class="comment">//8</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;<span class="type">T</span>&gt;.<span class="built_in">stride</span>           <span class="comment">//8</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//指针类型</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;unsafeMutablePointer&lt;<span class="type">T</span>&gt;&gt;.size           <span class="comment">//8</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;unsafeMutablePointer&lt;<span class="type">T</span>&gt;&gt;.alignment      <span class="comment">//8</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;unsafeMutablePointer&lt;<span class="type">T</span>&gt;&gt;.<span class="built_in">stride</span>         <span class="comment">//8</span></span><br><span class="line"></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;unsafeMutableBufferPointer&lt;<span class="type">T</span>&gt;&gt;.size           <span class="comment">//16</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;unsafeMutableBufferPointer&lt;<span class="type">T</span>&gt;&gt;.alignment      <span class="comment">//16</span></span><br><span class="line"><span class="type">MemoryLayout</span>&lt;unsafeMutableBufferPointer&lt;<span class="type">T</span>&gt;&gt;.<span class="built_in">stride</span>         <span class="comment">//16</span></span><br></pre></td></tr></table></figure>
+<p><code>MemoryLayout&lt;Type&gt;</code>是一个泛型,通过它的三个属性可以获取具体类型在内存中的分配：<code>size</code>表明该类型实际使用了多少个字节；<code>alignment</code>表明该类型必须对齐多少字节（如为8，意味着地址的起点地址可以被8整除）；<code>stride</code>表明从开始到结束一共需要占据多少字节。 <strong>Swift中基本类型的size和stride在内存中是一样的</strong> （可选型如<code>Double？</code>实际使用了9个字节，但是却需要占据16个字节）   <a href="https://stackoverflow.com/questions/381244/purpose-of-memory-alignment/381368#381368" target="_blank" rel="noopener">内存对齐的好处</a>这里针对内存对齐的好处有了比较详尽的描述，主要是速度快。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-782b760d0d011781e0b76fd1363d2901_hd.jpg" alt="MemoryLayout"></p>
+<h3 id="Struct-Stack-Memory"><a href="#Struct-Stack-Memory" class="headerlink" title="Struct Stack Memory"></a>Struct Stack Memory</h3><p>从一个栈的实例来看栈中内存的分配情况：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Me</span> </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> age: <span class="type">Int</span> = <span class="number">22</span>                    </span><br><span class="line">    <span class="keyword">let</span> height: <span class="type">Double</span>? = <span class="number">180.0</span>         </span><br><span class="line">    <span class="keyword">let</span> name: <span class="type">String</span> = <span class="string">"XiangHui"</span>        </span><br><span class="line">    <span class="keyword">var</span> hasGirlFriend: <span class="type">Bool</span> = <span class="literal">false</span>      </span><br><span class="line"> &#125;</span><br><span class="line"> <span class="comment">//MemoryLayout&lt;Double?&gt;.size         9</span></span><br><span class="line"> <span class="comment">//MemoryLayout&lt;Double?&gt;.alignment    8</span></span><br><span class="line"> <span class="comment">//MemoryLayout&lt;Double?&gt;.stride       16</span></span><br><span class="line"> </span><br><span class="line"> <span class="class"><span class="keyword">class</span> <span class="title">MyClass</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">func</span> <span class="title">test</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">var</span> me = <span class="type">Me</span>()</span><br><span class="line">		<span class="built_in">print</span>(me)</span><br><span class="line">	&#125;</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line"> <span class="keyword">let</span> myClass = <span class="type">MyClass</span>()</span><br><span class="line"> myclass.test()</span><br></pre></td></tr></table></figure>
+<p>在方法里打个断点使用调试器输出栈中的内存，在这之前可以猜想一下，<code>Int</code>类型占8个字节，<code>Double?</code>虽然size是9个字节，但是它的stride是16字节，所以占据了16字节，<code>String</code>类型占据了24个字节，最后<code>Bool</code>类型占据8个字节，一共<code>8 + 16 + 24 + 8 = 56</code>字节，也就是说这个结构体在栈上占据56字节的内存，打印如下：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">(lldb) po <span class="type">MemoryLayout</span>.size(ofValue: me)</span><br><span class="line"><span class="number">49</span></span><br><span class="line"></span><br><span class="line">(lldb) po <span class="type">MemoryLayout</span>.<span class="built_in">stride</span>(ofValue: me)</span><br><span class="line"><span class="number">56</span></span><br></pre></td></tr></table></figure>
+<p>奇怪，为什么size是49呢？因为size是从开始到实际结束所占据的内存，即Bool的size和stride都是为1个字节，这样的话，当前word还有7个字节是没有使用的内存，所以实际大小为49字节。再看详细地址打印：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">(lldb) frame variable -<span class="type">L</span> me</span><br><span class="line"><span class="number">0x00007ffeea2cda50</span>: (<span class="type">MemorySwiftProject</span>.<span class="type">Me</span>) me = &#123;</span><br><span class="line"><span class="number">0x00007ffeea2cda50</span>:   age = <span class="number">22</span></span><br><span class="line"><span class="number">0x00007ffeea2cda58</span>:   height = <span class="number">180</span></span><br><span class="line"><span class="number">0x00007ffeea2cda68</span>:   name = <span class="string">"XiangHui"</span></span><br><span class="line"><span class="number">0x00007ffeea2cda80</span>:   hasGirlFriend = <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>地址是从栈底一直向上增加的，我画出示意图如下：（<code>Bool</code>size为1）<br><img src="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E6%A0%88%E5%86%85%E5%AD%98.png" alt=""></p>
+<p>原来在结构体中栈的存储如此简单, 那么如果结构体中有声明引用类型呢？结果是引用类型占一个word（指针所占空间为8个字节）；那么如果在结构体中有方法体呢? 结论是结构体中即使有方法实现依然不占据内存，这个问题留待下篇文章来解决！但是可以有一个初步的猜测，我觉得应该是和方法的静态调用有关，也即是和编译器的编译相关。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 方法体在结构体中并不占据内存</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> a = <span class="number">1</span></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">test01</span><span class="params">()</span></span> &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> test = <span class="type">Test</span>()</span><br><span class="line"><span class="type">MemoryLayout</span>.size(ofValue: test)  <span class="comment">// 8</span></span><br><span class="line">    </span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Test2</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">test01</span><span class="params">()</span></span> &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> test2 = <span class="type">Test2</span>()</span><br><span class="line"><span class="type">MemoryLayout</span>.size(ofValue: test2) <span class="comment">// 0</span></span><br></pre></td></tr></table></figure>
+<h3 id="Method-Stack-Memory"><a href="#Method-Stack-Memory" class="headerlink" title="Method Stack Memory"></a>Method Stack Memory</h3><p>本来应该是要了解了解堆的，结果在方法调用断点输出的时候，发现了一些值得一提的点，所以就决定聊一聊关于方法栈中的内存！关于方法的调度，其实就是一个一个方法的入栈，栈顶方法执行完之后出栈，然后新的栈顶方法执行完之后出栈。如果是在一个递归方法的执行过程中，这个就感觉看起来很有意思。<br>但是呢，现在不聊方法的调度，而是聊一聊当执行一个方法的时候，方法的内部是如何进行内存分配的，首先一点，<strong>方法在执行过程中内存是分配在栈上的！</strong> </p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Me</span> </span>&#123;</span><br><span class="line">	<span class="keyword">let</span> age: <span class="type">Int</span> = <span class="number">22</span>              <span class="comment">// 8</span></span><br><span class="line">	<span class="keyword">let</span> height: <span class="type">Double</span>? = <span class="number">180.0</span>    <span class="comment">// size: 9 stride: 16</span></span><br><span class="line">	<span class="keyword">let</span> name: <span class="type">String</span> = <span class="string">"XiangHui"</span>  <span class="comment">// 24</span></span><br><span class="line">	<span class="keyword">let</span> a = <span class="type">MemoryClass</span>()          <span class="comment">// 8</span></span><br><span class="line">	<span class="keyword">let</span> hasGirlFriend = <span class="literal">false</span>      <span class="comment">// 1</span></span><br><span class="line"> &#125;</span><br><span class="line">  </span><br><span class="line"> <span class="comment">// MemoryLayout&lt;Me&gt;.stride  56</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">test</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> number = <span class="number">134</span>        <span class="comment">// stride: 8</span></span><br><span class="line">	<span class="keyword">var</span> name = <span class="string">"JoJo"</span>       <span class="comment">// stride: 8</span></span><br><span class="line">	<span class="keyword">var</span> me = <span class="type">Me</span>()	 		<span class="comment">// stride: 64</span></span><br><span class="line">	<span class="keyword">var</span> likes = [<span class="string">"comdy"</span>, <span class="string">"animation"</span>, <span class="string">"movies"</span>] <span class="comment">// stride: 8</span></span><br><span class="line">	</span><br><span class="line">    withUnsafeBytes(of: &amp;number, &#123; bytes <span class="keyword">in</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"number: <span class="subst">\(bytes)</span>"</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">    </span><br><span class="line">    withUnsafeBytes(of: &amp;name, &#123; bytes <span class="keyword">in</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"name: <span class="subst">\(bytes)</span>"</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">    </span><br><span class="line">    withUnsafeBytes(of: &amp;me, &#123; bytes <span class="keyword">in</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"me: <span class="subst">\(bytes)</span>"</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">    </span><br><span class="line">    withUnsafeBytes(of: &amp;likes, &#123; bytes <span class="keyword">in</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"likes: <span class="subst">\(bytes)</span>"</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里首先解释一下为什么结构体的stride是64个字节吗？通过上述讲了这里应该很明了了吧，在这个结构体中有<code>Int Double? String Class Bool</code>类型，一共8 + 16 + 24 + 8 + 8 = 56字节。还有一个小细节为什么数组likes的stride是8个字节呢？因为在栈上分配的依然是一个数组指针而已，它指向内存中的另一块存储空间，至于实际数组所存储的内存空间是如何分配呢？留待下篇文章解决~ 代码输出结果如下：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0x00007ffee46f2ac0</span>: (<span class="type">Int</span>) number = <span class="number">134</span></span><br><span class="line"><span class="number">0x00007ffee46f2aa8</span>: (<span class="type">String</span>) name = <span class="string">"JoJo"</span></span><br><span class="line"><span class="number">0x00007ffee46f2a68</span>: (<span class="type">MemorySwiftProject</span>.<span class="type">Me</span>) me = &#123;</span><br><span class="line"><span class="number">0x00007ffee46f2a68</span>:   age = <span class="number">22</span></span><br><span class="line"><span class="number">0x00007ffee46f2a70</span>:   height = <span class="number">180</span></span><br><span class="line"><span class="number">0x00007ffee46f2a80</span>:   name = <span class="string">"XiangHui"</span></span><br><span class="line">scalar:   a = <span class="number">0x000060c00001de10</span> &#123;&#125;  <span class="comment">//引用类型在堆中的具体地址</span></span><br><span class="line"><span class="number">0x00007ffee46f2aa0</span>:   hasGirlFriend = <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="number">0x00007ffee46f2a20</span>: ([<span class="type">String</span>]) likes = <span class="number">3</span> values &#123;</span><br><span class="line"><span class="number">0x00007ffc9d780500</span>:   [<span class="number">0</span>] = <span class="string">"comdy"</span></span><br><span class="line"><span class="number">0x00007ffc9d721710</span>:   [<span class="number">1</span>] = <span class="string">"animation"</span></span><br><span class="line"><span class="number">0x00007ffc9d6443d0</span>:   [<span class="number">2</span>] = <span class="string">"movies"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过<code>withUnsafeBytes(of:&amp;T) {}</code>方法，count输出的是Size。那么接下来开始分析了：首先有一点值得注意，输出的内存居然是依次递减的，也就是说栈底的元素反而内存地址较高，而后入栈的元素，地址是依次变小的，所以结构体如下：<br><img src="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E6%96%B9%E6%B3%95%E6%A0%88.png" alt=""><br>奇怪，为什么会多出64个字节呢？而且还是和结构体的size一样大。针对这个情况一开始我以为是数组的问题，以为这个和数组有关系，然后做出了大量的测试，如果没有数组的话，将数组变量换成一个Int类型，结果还是一样多出64字节，那我就想，就应该是结构体的原因了，结果去掉结构体变量后，发现一切正常，所有变量按照stride和alignment一一入栈，无异常。 </p>
+<p>然后接下来我改变结构体的大小结果发现，<strong>在方法栈中多出的这块内存依旧和结构体实例的size一样大</strong>，为什么呢？为什么在方法栈中给结构体分配内存的时候会多出一块内存呢，而且size还和它的size一样大？同样留着这个问题吧！</p>
+<h3 id="Heap-Memory"><a href="#Heap-Memory" class="headerlink" title="Heap Memory"></a>Heap Memory</h3><p>在我们看完栈上的内存之后，堆上的内存其实也是一样的，代码实例如下:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MemoryClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">let</span> name = <span class="string">"Naruto"</span></span><br><span class="line">    <span class="keyword">let</span> ninjutsu = <span class="string">"rasengan"</span>   <span class="comment">// 24</span></span><br><span class="line">    <span class="keyword">let</span> test = <span class="type">TestClass</span>()      <span class="comment">// 8</span></span><br><span class="line">    <span class="keyword">let</span> age = <span class="number">22</span>                <span class="comment">// 8</span></span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">beatSomeone</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">let</span> a = ninjutsu + ninjutsu</span><br><span class="line">        <span class="built_in">print</span>(a)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">heapTest</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">let</span> myClass = <span class="type">MemoryClass</span>()</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">print</span>(myClass)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">heapTest()</span><br></pre></td></tr></table></figure>
+<p>在heapTest( )方法中打个断点可以得到以下输出：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(lldb) frame variable -<span class="type">L</span> myClass</span><br><span class="line">scalar: (<span class="type">MemorySwiftProject</span>.<span class="type">MemoryClass</span>) myClass = <span class="number">0x000060400027ca80</span> &#123;</span><br><span class="line"><span class="number">0x000060400027ca90</span>:   ninjutsu = <span class="string">"rasengan"</span></span><br><span class="line">scalar:   test = <span class="number">0x00006040004456d0</span> &#123;</span><br><span class="line"><span class="number">0x00006040004456e0</span>:     name = <span class="string">"Hui"</span></span><br><span class="line">  &#125;</span><br><span class="line"><span class="number">0x000060400027cab0</span>:   age = <span class="number">22</span></span><br><span class="line">&#125;</span><br><span class="line">(lldb) po malloc_size(<span class="type">Unmanaged</span>.passUnretained(myClass <span class="keyword">as</span> <span class="type">AnyObject</span>).toOpaque())</span><br><span class="line"><span class="number">64</span></span><br></pre></td></tr></table></figure>
+<p>那么根据输出的结果可以得出以下结论：<br><img src="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%A0%86%E5%86%85%E5%AD%9801.png" alt="堆内存"><br>在这里有三个地方是多出来的三个字节，他们分别存什么呢？我从最后一个word开始分析</p>
+<h4 id="堆上的每次内存分配"><a href="#堆上的每次内存分配" class="headerlink" title="堆上的每次内存分配"></a>堆上的每次内存分配</h4><p>为什么从最后一个word开始分析呢？因为每次新建一个object，object的属性都是从第16个字节开始分配的，所以在每个对象的前两个word都必然存储一些其他的信息，因为之前的OC基础，所以可以猜测应该是存储的一个isa指针之类的信息。但是最后8个字节就不一定出现了，接下来我的测试方式是在MyClass中增加Bool类型的成员变量，结果通过<code>malloc_size(UnsafeRawPointer)</code>方法我得到的内存大小为<code>64  80  96 ...</code>每次都以16个字节递增，所以我可以初步确定这是堆分配内存的特性，每次都会分配16个字节的倍数的内存，回到上图，我如果增加一个<code>Int</code>成员变量，它的内存大小为64字节，而计算大小正好也是64，符合；我如果再增加一个<code>Bool</code>型的成员变量，它的内存大小为80字节，也正如推测。所以结论是：<strong>至少在iOS 64 系统上，堆上对对象分配内存时，每次都是分配的16个字节的倍数</strong></p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MemoryClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">let</span> name = <span class="string">"Naruto"</span></span><br><span class="line">    <span class="keyword">let</span> ninjutsu = <span class="string">"rasengan"</span>   <span class="comment">// 24</span></span><br><span class="line">    <span class="keyword">let</span> test = <span class="type">TestClass</span>()      <span class="comment">// 8</span></span><br><span class="line">    <span class="keyword">let</span> age = <span class="number">22</span>                <span class="comment">// 8</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">let</span> age2 = <span class="number">22</span>               <span class="comment">// 8</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// malloc_size(Unmanaged.passUnretained(myClass as AnyObject).toOpaque()) 64</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MemoryClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">let</span> name = <span class="string">"Naruto"</span></span><br><span class="line">    <span class="keyword">let</span> ninjutsu = <span class="string">"rasengan"</span>   <span class="comment">// 24</span></span><br><span class="line">    <span class="keyword">let</span> test = <span class="type">TestClass</span>()      <span class="comment">// 8</span></span><br><span class="line">    <span class="keyword">let</span> age = <span class="number">22</span>                <span class="comment">// 8</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">let</span> age2 = <span class="number">22</span>               <span class="comment">// 8</span></span><br><span class="line">    <span class="keyword">let</span> a = <span class="literal">false</span>               <span class="comment">// 1  （只多了一个Bool类型）</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// malloc_size(Unmanaged.passUnretained(myClass as AnyObject).toOpaque()) 80</span></span><br></pre></td></tr></table></figure>
+<h4 id="消失的类型变量"><a href="#消失的类型变量" class="headerlink" title="消失的类型变量"></a>消失的类型变量</h4><p>使用static修饰的name属性，在初始化类实例的时候并没有出现堆上的内存中，这在开篇第二幅图中就解释了这个问题，在整个内存区域可以分为栈区；堆区；全局变量，静态变量区；常量区；代码区。下面是我画的图：</p>
+<p><img src="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%A0%86%E5%86%85%E5%AD%9802.png" alt=""></p>
+<p>类型变量并不会分配在堆上，而是会在编译的时候就分配在Global Data区域中，所以这也是在堆上为什么类型变量没有分配内存的原因.</p>
+<h4 id="对象的第一个Word是什么？"><a href="#对象的第一个Word是什么？" class="headerlink" title="对象的第一个Word是什么？"></a>对象的第一个Word是什么？</h4><p>其实这个问题呢我也思考了很久，感觉上应该就是OC中的isa指针指向它的类，结果也是如此，<a href="https://academy.realm.io/posts/goto-mike-ash-exploring-swift-memory-layout/" target="_blank" rel="noopener">这篇文章</a>有很明确的解释：C++中对象的isa指针指向的是VTable,它只是单纯的方法列表，而在swift中更复杂一些，<strong>实际上所以的Swift类都是Objective-C类</strong>，如果添加了@obj或者继承NSObject的类会更直观，但是即使是纯粹的Swift类依然在本质上就是Objective-C类。</p>
+<p>所以第一个word其实就是一个isa指针，指向的就是Class; 但是更准确的说，不一定是isa指针，有时候是isa指针和其他的东西，比如说和当前对象相关联的其他对象（当前对象释放时它也需要清理）… 但是通常意义上我们可以理解为就是isa指针。</p>
+<p>我们可以做一个实验，改变当前对象的isa指针，指向其他的类型，那么会发生什么呢？</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Cat</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name = <span class="string">"cat"</span></span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">bark</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"maow"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//可变原始指针（当前实例的指针）</span></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">headerPointerOfClass</span><span class="params">()</span></span> -&gt; <span class="type">UnsafeMutableRawPointer</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">Unmanaged</span>.passUnretained(<span class="keyword">self</span> <span class="keyword">as</span> <span class="type">AnyObject</span>).toOpaque()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Dog</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name = <span class="string">"dog"</span></span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">bark</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">"wangwang"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//可变原始指针（当前实例的指针）</span></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">headerPointerOfClass</span><span class="params">()</span></span> -&gt; <span class="type">UnsafeMutableRawPointer</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">Unmanaged</span>.passUnretained(<span class="keyword">self</span> <span class="keyword">as</span> <span class="type">AnyObject</span>).toOpaque()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">heapTest</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">let</span> cat = <span class="type">Cat</span>()</span><br><span class="line">        <span class="keyword">let</span> dog = <span class="type">Dog</span>()</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">let</span> catPointer = cat.headerPointerOfClass()</span><br><span class="line">        <span class="keyword">let</span> dogPointer = dog.headerPointerOfClass()</span><br><span class="line">        </span><br><span class="line">        catPointer.advanced(by: <span class="number">0</span>)</span><br><span class="line">            .bindMemory(to: <span class="type">Dog</span>.<span class="keyword">self</span>, capacity: <span class="number">1</span>)</span><br><span class="line">            .initialize(to: dogPointer.assumingMemoryBound(to: <span class="type">Dog</span>.<span class="keyword">self</span>).pointee, <span class="built_in">count</span>: <span class="number">1</span>)</span><br><span class="line">        </span><br><span class="line">        cat.bark()  <span class="comment">// wangwang</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>因为cat实例的isa指针指向了Dog类型，所以调用方法的时候会动态的根据方法名在Dog类型的方法列表中找到对应的方法然后执行，<strong>从这里可以知道类中的方法是动态派发的，在runtime的时候找到对应的方法然后执行！</strong></p>
+<p>既然提到了isa指针，那么接下来有会有疑惑了isa指向的Class的结构到底是怎样的呢？因为之前已经提到了Swift类本质上是OC类，所以我们看OC类的定义就可以了，因为Objective-C类定义是开源的，所以就看下图呗：</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> isa</span><br><span class="line"><span class="type">Class</span> super_class</span><br><span class="line">const char *name</span><br><span class="line">long version</span><br><span class="line">long info</span><br><span class="line">long instance_size</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">objc_ivar_list</span> *<span class="title">ivars</span></span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">objc_method_list</span> **<span class="title">methodLists</span></span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">objc_cache</span> *<span class="title">cache</span></span></span><br><span class="line"><span class="class"><span class="title">struct</span> <span class="title">objc_protocol_list</span> *<span class="title">protocols</span></span></span><br></pre></td></tr></table></figure>
+<p>内存中的Class存储了类名；它的实例大小；属性列表；方法列表；协议列表；缓存（加快了方法调度）等等…但是，这毕竟是一个Objective-C Class中的结构，事实上Swift Class拥有Objective-C Class里的所有内容而且还添加了一些东西，<strong>但是本质上,Swift Class只是拥有更多东西的Objective-C Class</strong></p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">uint32_t flags;</span><br><span class="line">uint32_t instanceAddressOffset;</span><br><span class="line">uint32_t instanceSize;</span><br><span class="line">uint16_t instanceAlignMask;</span><br><span class="line">uint16_t reserved;</span><br><span class="line">uint32_t classSize;</span><br><span class="line">uint32_t classAddressOffset;</span><br><span class="line">void *description;</span><br></pre></td></tr></table></figure>
+<h4 id="对象里的第二个Word"><a href="#对象里的第二个Word" class="headerlink" title="对象里的第二个Word"></a>对象里的第二个Word</h4><p>好吧，第一个Word存储的可以简单地说就是指向Class的指针，那么第二个Word呢？其实第二个Word存放的是引用计数，在Swift是使用的引用计数来管理对象的生命周期的，Swift中有两种引用计数，一种是强引用，一种是弱引用，<strong>而在两者都在这个Word中，每一种引用计数的大小31个字节！</strong> 那么接下来那张图就可以完善了：<br><img src="https://blog-images-1256070196.cos.ap-beijing.myqcloud.com/%E5%A0%86%E5%86%85%E5%AD%98%E5%AE%8C.png" alt="堆"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>其实这一篇下来还是学了挺多东西的，接下来我来捋一捋脉络：</p>
+<ul>
+<li>首先值类型到底是在什么时候进行复制：<strong>值类型在赋值的时候就复制</strong>，而不是在改变的时候，也就是说并非写时复制</li>
+<li>然后介绍一些基本的关于内存的基本概念：MemoryLayout三属性等</li>
+<li>通过一些实例来说明了<strong>Struct在栈中的存储结构</strong>，要注意栈底位置和地址增加方向</li>
+<li>接着说明了在<strong>方法栈中Method的存储结构</strong>，栈底在顶部，地址是从栈底向栈顶递减的，如果方法栈中有结构体也正好是可以符合存储结构的</li>
+<li>最后讲了<strong>对象在Heap中的存储结构</strong>，第一个Word是存放isa指针，第二个Word是存放的retain counts；以及在针对对象分配内存的时候，内存是以16个字节的倍数递增的。</li>
+</ul>
+<p>但是呢，也给自己留下了一些问题，这些问题就留待在下篇文章解答吧：    </p>
+<ol>
+<li>数组的内存到底怎么分配的？</li>
+<li>结构体中没有方法的存储空间，那么是如何调用结构体中的方法呢？</li>
+<li>类中的方法又是如何调度的呢？</li>
+<li>方法栈中如果出现结构体，会多出和结构体大小一致的空间，这是为什么呢？</li>
+<li>协议又是如何存储的？结构体继承协议会怎样？类继承协议会怎样？</li>
+</ol>
+<p>参考文章：    </p>
+<p><a href="https://www.raywenderlich.com/148569/unsafe-swift" target="_blank" rel="noopener">Unsafe Swift: Using Pointers And Interacting With C</a><br><a href="https://academy.realm.io/posts/goto-mike-ash-exploring-swift-memory-layout/" target="_blank" rel="noopener">Exploring Swift Memory Layout</a><br><a href="https://zhuanlan.zhihu.com/p/26909719" target="_blank" rel="noopener">Swift 对象内存模型探究（一）</a><br><a href="http://blog.csdn.net/hello_hwc/article/details/53147910" target="_blank" rel="noopener">Swift进阶之内存模型和方法调度</a><br><a href="https://stackoverflow.com/questions/24058906/printing-a-variable-memory-address-in-swift" target="_blank" rel="noopener">Printing a variable memory address in swift</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS-Swift/" rel="tag"># iOS Swift</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/29/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/lance.gif"
+                alt="Lance" />
+            
+              <p class="site-author-name" itemprop="name">Lance</p>
+              <p class="site-description motion-element" itemprop="description">Whatever is worth doing is worth doing well.</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/LanceXHui" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/XiangJani" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.linkedin.com/in/%E8%BE%89-%E5%90%91-025baa155/" target="_blank" title="LinkedIn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>LinkedIn</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Question"><span class="nav-number">1.</span> <span class="nav-text">Question</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Answer"><span class="nav-number">2.</span> <span class="nav-text">Answer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Deep-in"><span class="nav-number">3.</span> <span class="nav-text">Deep in</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Concept"><span class="nav-number">3.1.</span> <span class="nav-text">Concept</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MemoryLayout"><span class="nav-number">3.2.</span> <span class="nav-text">MemoryLayout</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Struct-Stack-Memory"><span class="nav-number">3.3.</span> <span class="nav-text">Struct Stack Memory</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Method-Stack-Memory"><span class="nav-number">3.4.</span> <span class="nav-text">Method Stack Memory</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Heap-Memory"><span class="nav-number">3.5.</span> <span class="nav-text">Heap Memory</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#堆上的每次内存分配"><span class="nav-number">3.5.1.</span> <span class="nav-text">堆上的每次内存分配</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#消失的类型变量"><span class="nav-number">3.5.2.</span> <span class="nav-text">消失的类型变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对象的第一个Word是什么？"><span class="nav-number">3.5.3.</span> <span class="nav-text">对象的第一个Word是什么？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对象里的第二个Word"><span class="nav-number">3.5.4.</span> <span class="nav-text">对象里的第二个Word</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lance</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+<div>
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_pv" style='display:none'>
+    本站总访问量 <span id="busuanzi_value_site_pv"></span> 次
+    <span class="post-meta-divider">|</span>
+</span>
+<span id="busuanzi_container_site_uv" style='display:none'>
+    有<span id="busuanzi_value_site_uv"></span>人看过我的博客啦
+</span>
+</div>
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://lancehui.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'https://lancexhui.github.io/2018/02/06/从值类型复制引发的Swift内存的思考01/';
+          this.page.identifier = '2018/02/06/从值类型复制引发的Swift内存的思考01/';
+          this.page.title = '从值类型复制引发的Swift内存的思考01';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://lancehui.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
